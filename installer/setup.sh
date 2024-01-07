@@ -20,11 +20,11 @@ max_ipv6_prefix_len=112
 evernode_alias=/usr/bin/evernode
 log_dir=/tmp/evernode
 
-repo_owner="EvernodeXRPL"
-repo_name="evernode-resources"
+repo_owner="du1ana"
+repo_name="evres"
 desired_branch="main"
 
-latest_version_endpoint="https://api.github.com/repos/du1ana/evres/releases/latest"
+latest_version_endpoint="https://api.github.com/repos/$repo_owner/$repo_name/releases/latest"
 latest_version_data=$(curl -s "$latest_version_endpoint")
 latest_version=$(echo "$latest_version_data" | jq -r '.tag_name')
 if [ -z "$latest_version" ]|| [ "$latest_version" = "null" ]; then
@@ -33,7 +33,9 @@ if [ -z "$latest_version" ]|| [ "$latest_version" = "null" ]; then
 fi
 
 # Prepare resources URLs
-resource_storage="https://github.com/du1ana/evres/releases/download/$latest_version"
+resource_storage="https://github.com/$repo_owner/$repo_name/releases/download/$latest_version"
+repo_owner="EvernodeXRPL"
+repo_name="evernode-resources"
 licence_url="https://raw.githubusercontent.com/$repo_owner/$repo_name/$desired_branch/license/evernode-license.pdf"
 config_url="https://raw.githubusercontent.com/$repo_owner/$repo_name/$desired_branch/definitions/definitions.json"
 setup_script_url="$resource_storage/setup.sh"
@@ -71,7 +73,7 @@ export MB_XRPL_USER="sashimbxrpl"
 export CG_SUFFIX="-cg"
 export EVERNODE_AUTO_UPDATE_SERVICE="evernode-auto-update"
 
-export NETWORK="${NETWORK:-testnet}"
+export NETWORK="${NETWORK:-mainnet}"
 
 # Private docker registry (not used for now)
 export DOCKER_REGISTRY_USER="sashidockerreg"
@@ -227,7 +229,7 @@ function install_nodejs_utility() {
     mkdir -p /etc/apt/keyrings
     curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
 
-    NODE_MAJOR=16
+    NODE_MAJOR=20
     echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list
     apt-get update
     apt-get -y install nodejs
@@ -238,12 +240,12 @@ function check_prereq() {
 
     if ! command -v node &>/dev/null; then
         echo "Installing nodejs..."
-        ! install_nodejs_utility >/dev/null || exit 1
+        ! install_nodejs_utility >/dev/null && exit 1
     else
         version=$(node -v | cut -d '.' -f1)
         version=${version:1}
-        if [[ $version -lt 16 ]]; then
-            echo "$evernode requires NodeJs 16.x or later. You system has NodeJs $version installed. Either remove the NodeJs installation or upgrade to NodeJs 16.x."
+        if [[ $version -lt 20 ]]; then
+            echo "$evernode requires NodeJs 20.x or later. You system has NodeJs $version installed. Either remove the NodeJs installation or upgrade to NodeJs 20.x."
             exit 1
         fi
     fi
@@ -264,6 +266,12 @@ function check_prereq() {
     if ! command -v qrencode &>/dev/null; then
         echo "qrencode command not found. Installing.."
         apt-get install -y qrencode >/dev/null
+    fi
+
+    # Check jq command is installed.
+    if ! command -v jq &>/dev/null; then
+        echo "jq command not found. Installing.."
+        apt-get install -y jq >/dev/null
     fi
 }
 
@@ -964,7 +972,7 @@ function set_host_xrpl_account() {
         fi
 
         while true ; do
-            read -ep "Specify the XRPL account address: " xrpl_address </dev/tty
+            read -ep "Specify the Xahau account address: " xrpl_address </dev/tty
             ! [[ $xrpl_address =~ ^r[0-9a-zA-Z]{24,34}$ ]] && echo "Invalid XRPL account address." && continue
 
             echo "Checking account $xrpl_address..."
@@ -1291,7 +1299,7 @@ function reg_info() {
     local mb_user_runtime_dir="/run/user/$mb_user_id"
     local sashimono_mb_xrpl_status=$(sudo -u "$MB_XRPL_USER" XDG_RUNTIME_DIR="$mb_user_runtime_dir" systemctl --user is-active $MB_XRPL_SERVICE)
     echo "Sashimono agent status: $sashimono_agent_status"
-    echo "Sashimono mb xrpl status: $sashimono_mb_xrpl_status"
+    echo "Sashimono message board status: $sashimono_mb_xrpl_status"
     echo -e "\nYour account details are stored in $MB_XRPL_DATA/mb-xrpl.cfg"
 }
 
@@ -1795,9 +1803,6 @@ elif [ "$mode" == "list" ]; then
     sashi list
 
 elif [ "$mode" == "update" ]; then
-    config_json_path="$SASHIMONO_BIN/evernode-setup-helpers/configuration.json"
-    export EVERNODE_GOVERNOR_ADDRESS=${OVERRIDE_EVERNODE_GOVERNOR_ADDRESS:-$(jq -r ".$NETWORK.governorAddress" $config_json_path)}
-
     update_evernode
 
 elif [ "$mode" == "log" ]; then
