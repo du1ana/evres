@@ -71,7 +71,7 @@ export MB_XRPL_USER="sashimbxrpl"
 export CG_SUFFIX="-cg"
 export EVERNODE_AUTO_UPDATE_SERVICE="evernode-auto-update"
 
-export NETWORK="${NETWORK:-devnet}"
+export NETWORK="${NETWORK:-mainnet}"
 
 # Private docker registry (not used for now)
 export DOCKER_REGISTRY_USER="sashidockerreg"
@@ -233,8 +233,12 @@ function install_nodejs_utility() {
     apt-get -y install nodejs
 }
 
-function check_prereq() {
-    echomult "\nChecking initial level pre-requisites..."
+function check_common_prereq() {
+    # Check jq command is installed.
+    if ! command -v jq &>/dev/null; then
+        echo "jq command not found. Installing.."
+        apt-get install -y jq >/dev/null
+    fi
 
     if ! command -v node &>/dev/null; then
         echo "Installing nodejs..."
@@ -247,6 +251,12 @@ function check_prereq() {
             exit 1
         fi
     fi
+}
+
+function check_prereq() {
+    echomult "\nChecking initial level prerequisites..."
+
+    check_common_prereq
 
     # Check bc command is installed.
     if ! command -v bc &>/dev/null; then
@@ -264,12 +274,6 @@ function check_prereq() {
     if ! command -v qrencode &>/dev/null; then
         echo "qrencode command not found. Installing.."
         apt-get install -y qrencode >/dev/null
-    fi
-
-    # Check jq command is installed.
-    if ! command -v jq &>/dev/null; then
-        echo "jq command not found. Installing.."
-        apt-get install -y jq >/dev/null
     fi
 }
 
@@ -784,15 +788,15 @@ function set_transferee_address() {
 
         local address=''
         while true ; do
-            read -ep "Specify the XRPL account address of the transferee: " address </dev/tty
-            ! [[ $address =~ ^r[a-zA-Z0-9]{24,34}$ ]] && echo "Invalid XRPL account address." || break
+            read -ep "Specify the Xahau account address of the transferee: " address </dev/tty
+            ! [[ $address =~ ^r[a-zA-Z0-9]{24,34}$ ]] && echo "Invalid Xahau account address." || break
 
         done
 
         transferee_address=$address
     fi
 
-    ! [[ $transferee_address =~ ^r[a-zA-Z0-9]{24,34}$ ]] && echo "Invalid XRPL account address." && exit 1
+    ! [[ $transferee_address =~ ^r[a-zA-Z0-9]{24,34}$ ]] && echo "Invalid Xahau account address." && exit 1
 }
 
 # Function to generate QR code in the terminal
@@ -872,7 +876,11 @@ function set_host_xrpl_account() {
     # Create MB_XRPL_USER as we require that user for secret key ownership management.
     if ! grep -q "^$MB_XRPL_USER:" /etc/passwd; then
         echomult "Creating Message-board User..."
-        useradd --shell /usr/sbin/nologin -m $MB_XRPL_USER
+        useradd --shell /usr/sbin/nologin -m $MB_XRPL_USER 2>/dev/null
+
+        # Setting the ownership of the MB_XRPL_USER's home to MB_XRPL_USER expilcity.
+        # NOTE : There can be user id mismatch, as we do not delete MB_XRPL_USER's home in the uninstallation even though the user is removed.
+        chown -R "$MB_XRPL_USER":"$MB_XRPL_USER" /home/$MB_XRPL_USER
     fi
 
     if [ "$account_validate_criteria" == "register" ]; then
@@ -917,51 +925,36 @@ function set_host_xrpl_account() {
         \n2. At least $reg_fee EVR to cover Evernode registration fee.
         \n\nYou can scan the following QR code in your wallet app to send funds based on the account condition:\n"
 
-       generate_qrcode "$xrpl_address"
+        generate_qrcode "$xrpl_address"
 
         account_condition='-'
 
         echomult "\nChecking the account condition..."
+        echomult "To set up your host account, ensure a deposit of $min_xah_requirement XAH to cover the regular transaction fees for the first three months."
+
+        required_balance=$min_xah_requirement
         while true ; do
-            account_condition=$(exec_jshelper check-acc-condition $rippled_server $EVERNODE_GOVERNOR_ADDRESS $xrpl_address) \
+            wait_call "exec_jshelper check-balance $rippled_server $EVERNODE_GOVERNOR_ADDRESS $xrpl_address NATIVE $required_balance" "Thank you. [OUTPUT] XAH balance is there in your host account." \
             && break
-            confirm "\nDo you want to re-check the account condition?\nPressing 'n' would terminate the installation." || exit 1
+            confirm "\nDo you want to re-check the balance?\nPressing 'n' would terminate the installation." || exit 1
         done
 
-        declare -Ar AccCondtionArry=( [0]="RC-FRESH" [1]="RC-PREPARED" )
 
-        if [ "$account_condition" == "${AccCondtionArry[0]}" ]; then
+        echomult "\nPreparing host account..."
+        while true ; do
+            wait_call "exec_jshelper prepare-host $rippled_server $EVERNODE_GOVERNOR_ADDRESS $xrpl_address $xrpl_secret $inetaddr" "Account preparation is successfull." && break
+            confirm "\nDo you want to re-try account preparation?\nPressing 'n' would terminate the installation." || exit 1
+        done
 
-            echomult "To set up your host account, ensure a deposit of $min_xah_requirement XAH to cover the regular transaction fees for the first three months."
+        echomult "\n\nIn order to register in Evernode you need to have $reg_fee EVR balance in your host account. Please deposit the required registration fee in EVRs.
+        \nYou can scan the provided QR code in your wallet app to send funds:"
 
-            required_balance=$min_xah_requirement
-            while true ; do
-                wait_call "exec_jshelper check-balance $rippled_server $EVERNODE_GOVERNOR_ADDRESS $xrpl_address NATIVE $required_balance" "Thank you. [OUTPUT] XAH balance is there in your host account." \
-                && break
-                confirm "\nDo you want to re-check the balance?\nPressing 'n' would terminate the installation." || exit 1
-            done
-
-            echomult "\nPreparing account with EVR trust-line..."
-            while true ; do
-                wait_call "exec_jshelper prepare-host $rippled_server $EVERNODE_GOVERNOR_ADDRESS $xrpl_address $xrpl_secret $inetaddr" "Account preparation is successfull." && break
-                confirm "\nDo you want to re-try account preparation?\nPressing 'n' would terminate the installation." || exit 1
-            done
-
-            account_condition=${AccCondtionArry[1]}
-        fi
-
-        if [ "$account_condition" == "${AccCondtionArry[1]}" ]; then
-            echomult "\n\nIn order to register in Evernode you need to have $reg_fee EVR balance in your host account. Please deposit the required registration fee in EVRs.
-            \nYou can scan the provided QR code in your wallet app to send funds:"
-
-            required_balance=$reg_fee
-            while true ; do
-                wait_call "exec_jshelper check-balance $rippled_server $EVERNODE_GOVERNOR_ADDRESS $xrpl_address ISSUED $required_balance" "Thank you. [OUTPUT] EVR balance is there in your host account." \
-                && break
-                confirm "\nDo you want to re-check the balance?\nPressing 'n' would terminate the installation." || exit 1
-            done
-        fi
-
+        required_balance=$reg_fee
+        while true ; do
+            wait_call "exec_jshelper check-balance $rippled_server $EVERNODE_GOVERNOR_ADDRESS $xrpl_address ISSUED $required_balance" "Thank you. [OUTPUT] EVR balance is there in your host account." \
+            && break
+            confirm "\nDo you want to re-check the balance?\nPressing 'n' would terminate the installation." || exit 1
+        done
 
     elif [ "$account_validate_criteria" == "transfer" ] || [ "$account_validate_criteria" == "re-register" ]; then
 
@@ -1612,18 +1605,23 @@ function delete_instance()
 {
     [ "$EUID" -ne 0 ] && echo "Please run with root privileges (sudo)." && exit 1
 
-    instance_name=$1
-    echo "Deleting instance $instance_name"
-    ! sudo -u $MB_XRPL_USER MB_DATA_DIR=$MB_XRPL_DATA node $MB_XRPL_BIN delete $instance_name &&
-        echo "There was an error in deleting the instance." && exit 1
-
     # Restart the message board to update the instance count
     local mb_user_id=$(id -u "$MB_XRPL_USER")
     local mb_user_runtime_dir="/run/user/$mb_user_id"
 
-    sudo -u "$MB_XRPL_USER" XDG_RUNTIME_DIR="$mb_user_runtime_dir" systemctl --user restart $MB_XRPL_SERVICE
+    echomult "Stopping the message board..."
+    sudo -u "$MB_XRPL_USER" XDG_RUNTIME_DIR="$mb_user_runtime_dir" systemctl --user stop $MB_XRPL_SERVICE
 
-    echo "Instance deletion completed."
+    local has_error=0
+    instance_name=$1
+    echo "Deleting instance $instance_name"
+    ! sudo -u $MB_XRPL_USER MB_DATA_DIR=$MB_XRPL_DATA node $MB_XRPL_BIN delete $instance_name &&
+        echo "There was an error in deleting the instance." && has_error=1
+
+    echomult "Starting the message board..."
+    sudo -u "$MB_XRPL_USER" XDG_RUNTIME_DIR="$mb_user_runtime_dir" systemctl --user start $MB_XRPL_SERVICE
+
+    [ $has_error == 0 ] && echo "Instance deletion completed."
 }
 
 # Begin setup execution flow --------------------
@@ -1764,6 +1762,8 @@ elif [ "$mode" == "transfer" ]; then
             transferee_address=${5}         # Address of the transferee.
             rippled_server=${6}             # Rippled server URL
         fi
+
+        check_common_prereq
 
         set_environment_configs
 
