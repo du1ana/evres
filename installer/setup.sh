@@ -20,8 +20,8 @@ max_ipv6_prefix_len=112
 evernode_alias=/usr/bin/evernode
 log_dir=/tmp/evernode
 
-repo_owner="EvernodeXRPL"
-repo_name="evernode-resources"
+repo_owner="du1ana"
+repo_name="evres"
 desired_branch="main"
 
 latest_version_endpoint="https://api.github.com/repos/$repo_owner/$repo_name/releases/latest"
@@ -1150,6 +1150,8 @@ function install_evernode() {
         enable_evernode_auto_updater
     fi
 
+    exit 1
+
     set +o pipefail
 
     rm -r $tmp
@@ -1717,7 +1719,6 @@ if [ "$mode" == "install" ]; then
 
     # TODO - CHECKPOINT - 03
     echo "Starting installation..."
-    exit 1
     install_evernode 0
 
     rm -r $setup_helper_dir >/dev/null 2>&1
