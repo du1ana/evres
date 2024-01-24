@@ -1150,8 +1150,6 @@ function install_evernode() {
         enable_evernode_auto_updater
     fi
 
-    exit 1
-
     set +o pipefail
 
     rm -r $tmp
