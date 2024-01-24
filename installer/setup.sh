@@ -20,8 +20,8 @@ max_ipv6_prefix_len=112
 evernode_alias=/usr/bin/evernode
 log_dir=/tmp/evernode
 
-repo_owner="du1ana"
-repo_name="evres"
+repo_owner="EvernodeXRPL"
+repo_name="evernode-resources"
 desired_branch="main"
 
 latest_version_endpoint="https://api.github.com/repos/$repo_owner/$repo_name/releases/latest"
@@ -71,7 +71,7 @@ export MB_XRPL_USER="sashimbxrpl"
 export CG_SUFFIX="-cg"
 export EVERNODE_AUTO_UPDATE_SERVICE="evernode-auto-update"
 
-export NETWORK="${NETWORK:-devnet}"
+export NETWORK="${NETWORK:-mainnet}"
 
 # Private docker registry (not used for now)
 export DOCKER_REGISTRY_USER="sashidockerreg"
@@ -1717,6 +1717,7 @@ if [ "$mode" == "install" ]; then
 
     # TODO - CHECKPOINT - 03
     echo "Starting installation..."
+    exit 1
     install_evernode 0
 
     rm -r $setup_helper_dir >/dev/null 2>&1
