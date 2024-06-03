@@ -1,3 +1,4 @@
+#curl -fsSL https://github.com/du1ana/evres/releases/download/sashi_v3.5.7/setup.sh | cat | sudo SKIP_SYSREQ=1 NO_DOMAIN=1 NETWORK=devnet bash -s install
 #!/bin/bash
 
 # Define an array of source and destination file paths
@@ -5,9 +6,10 @@ file_paths=(
     "/home/dulana/EvernodeXRPL/sashimono/build/installer.tar.gz /home/dulana/du1ana repos/evres/installer/installer.tar.gz"
     "/home/dulana/EvernodeXRPL/sashimono/build/setup-jshelper.tar.gz /home/dulana/du1ana repos/evres/installer/setup-jshelper.tar.gz"
     "/home/dulana/EvernodeXRPL/sashimono/installer/setup.sh /home/dulana/du1ana repos/evres/installer/setup.sh"
+    "/home/dulana/EvernodeXRPL/sashimono/build/reputation-contract.tar.gz /home/dulana/du1ana repos/evres/installer/reputation-contract.tar.gz"
 )
 
-cd "/home/dulana/EvernodeXRPL/sashimono" &&  make -j8 && make installer -j8
+cd "/home/dulana/EvernodeXRPL/sashimono/" &&  make -j8 && make installer -j8
 
 # Loop through each pair and perform the copy and replace operation
 for path_pair in "${file_paths[@]}"; do
