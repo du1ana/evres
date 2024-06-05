@@ -2109,11 +2109,10 @@ WantedBy=timers.target" >/etc/systemd/system/$EVERNODE_AUTO_UPDATE_SERVICE.timer
             if confirm "\nWould you like to reimburse reputation account for reputation contract lease costs?"; then
                 reimburse_enabled=true
                 echomult "\ndulTest>> setup.sh setting reimburse_enabled=$reimburse_enabled."
-        fi
-            else
-                echomult "\nDenied reputation account reimbusrement.\nYou can opt-in for reimbursement later by using 'evernode reputationd reimburse' command.\n"
             fi
         else
+                echomult "\nDenied reputation account reimbusrement.\nYou can opt-in for reimbursement later by using 'evernode reputationd reimburse' command.\n"
+        fi
         
         if [ "$upgrade" == "0" ]; then
             echo -e "\nAccount setup is complete."
