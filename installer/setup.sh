@@ -2543,7 +2543,7 @@ WantedBy=timers.target" >/etc/systemd/system/$EVERNODE_AUTO_UPDATE_SERVICE.timer
             reputationd_info
             echo ""
             ! sudo -u $REPUTATIOND_USER REPUTATIOND_DATA_DIR=$REPUTATIOND_DATA node $REPUTATIOND_BIN repinfo && echo "Error getting reputation status" && exit 1
-        elif [ "$2" == "reimburse" ]; then
+        #elif [ "$2" == "reimburse" ]; then
             #dulTest>>> add function to edit reputation.cfg's reimburseFrequency value.
         else
             echomult "ReputationD management tool
