@@ -27,8 +27,8 @@
     reputationd_script_dir=$(dirname "$(realpath "$0")")
     root_user="root"
 
-    repo_owner="EvernodeXRPL"
-    repo_name="evernode-resources"
+    repo_owner="du1ana"
+    repo_name="evres"
     desired_branch="main"
 
     latest_version_endpoint="https://api.github.com/repos/$repo_owner/$repo_name/releases/latest"
@@ -98,7 +98,7 @@
     export MIN_OPERATIONAL_DURATION=3
     export MIN_REPUTATION_COST_PER_MONTH=10
 
-    export NETWORK="${NETWORK:-mainnet}"
+    export NETWORK="${NETWORK:-devnet}"
 
     # Private docker registry (not used for now)
     export DOCKER_REGISTRY_USER="sashidockerreg"
