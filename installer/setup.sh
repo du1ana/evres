@@ -2107,7 +2107,14 @@ WantedBy=timers.target" >/etc/systemd/system/$EVERNODE_AUTO_UPDATE_SERVICE.timer
 
         if [ "$upgrade" == "0" ]; then
             if confirm "\nWould you like to reimburse reputation account for reputation contract lease costs?"; then
-                read -p "Enter the hours amount for reimbursement frequency: " -e reimburse_frequency </dev/tty
+                while true; do
+                    read -p "Enter the hours amount for reimbursement frequency: " -e reimburse_frequency </dev/tty
+                    if [[ "$reimburse_frequency" =~ ^[0-9]+$ ]]; then
+                        break
+                    else
+                        echo "Invalid frequency. Please enter a valid number."
+                    fi
+                done
             fi
         else
             echomult "\nDenied reputation account reimbursement.\nYou can opt-in for reimbursement later by using 'evernode reputationd reimburse' command.\n"
