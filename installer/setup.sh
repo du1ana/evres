@@ -27,8 +27,8 @@
     reputationd_script_dir=$(dirname "$(realpath "$0")")
     root_user="root"
 
-    repo_owner="du1ana"
-    repo_name="evres"
+    repo_owner="EvernodeXRPL"
+    repo_name="evernode-resources"
     desired_branch="main"
 
     latest_version_endpoint="https://api.github.com/repos/$repo_owner/$repo_name/releases/latest"
