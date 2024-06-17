@@ -2273,7 +2273,7 @@ WantedBy=timers.target" >/etc/systemd/system/$EVERNODE_AUTO_UPDATE_SERVICE.timer
         echomult "Removing Evernode reputation reimbursement system"
 
         # check config whether already opted in
-        local saved_reimburse_frequency=$(jq -r '.xrpl.secretPath' "$REPUTATIOND_CONFIG")
+        local saved_reimburse_frequency=$(jq -r '.reimburse.frequency' "$REPUTATIOND_CONFIG")
         
         if [[ "$saved_reimburse_frequency" =~ ^[0-9]+$ ]]; then
             removed_reimbusement = true
