@@ -2274,6 +2274,7 @@ WantedBy=timers.target" >/etc/systemd/system/$EVERNODE_AUTO_UPDATE_SERVICE.timer
 
         # check config whether already opted in
         local saved_reimburse_frequency=$(jq -r '.reimburse.frequency' "$REPUTATIOND_CONFIG")
+        local removed_reimbusement = false
         
         if [[ "$saved_reimburse_frequency" =~ ^[0-9]+$ ]]; then
             removed_reimbusement = true
