@@ -2263,8 +2263,8 @@ WantedBy=timers.target" >/etc/systemd/system/$EVERNODE_AUTO_UPDATE_SERVICE.timer
 
         local saved_reimburse_frequency=$(jq -r '.reimburse.frequency' "$REPUTATIOND_CONFIG")
         if [[ "$saved_reimburse_frequency" =~ ^[0-9]+$ ]]; then
-            confirm "\nYou have already opted in for reputation reimbursement. Reimbursement interval is $saved_reimburse_frequency hrs. Do you want to change the reimbursement frequency?"; then
-            set_reimbursement_config
+            if confirm "\nYou have already opted in for reputation reimbursement. Reimbursement interval is $saved_reimburse_frequency hrs. Do you want to change the reimbursement frequency?"; then
+                set_reimbursement_config
         elif confirm "\nWould you like to reimburse reputation account for reputation contract lease costs?"; then
             set_reimbursement_config
         fi
