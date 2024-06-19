@@ -2253,21 +2253,23 @@ WantedBy=timers.target" >/etc/systemd/system/$EVERNODE_AUTO_UPDATE_SERVICE.timer
     }
     
     function configure_reputationd_reimbursement() {
-    [ "$EUID" -ne 0 ] && echo "Please run with root privileges (sudo)." && return 1
-    
-    if [ ! -f "/home/$REPUTATIOND_USER/.config/systemd/user/$REPUTATIOND_SERVICE.service" ]; then
-        echo "The host is currently not opted-in to Evernode reputation and reward system." && return 1
-    fi
+        [ "$EUID" -ne 0 ] && echo "Please run with root privileges (sudo)." && return 1
 
-    local saved_reimburse_frequency=$(jq -r '.reimburse.frequency' "$REPUTATIOND_CONFIG")
-    if [[ "$saved_reimburse_frequency" =~ ^[0-9]+$ ]]; then
-        if confirm "\nYou have already opted in for reputation reimbursement. Reimbursement interval is $saved_reimburse_frequency hrs. Do you want to change the reimbursement frequency?"; then
+        #check reputationd enabled
+        if [ ! -f "/home/$REPUTATIOND_USER/.config/systemd/user/$REPUTATIOND_SERVICE.service" ]; then
+            # reputationd_enabled=false
+            echo "The host is currently not opted-in to Evernode reputation and reward system." && return 1
+        fi
+
+        local saved_reimburse_frequency=$(jq -r '.reimburse.frequency' "$REPUTATIOND_CONFIG")
+        if [[ "$saved_reimburse_frequency" =~ ^[0-9]+$ ]]; then
+            confirm "\nYou have already opted in for reputation reimbursement. Reimbursement interval is $saved_reimburse_frequency hrs. Do you want to change the reimbursement frequency?"; then
+            set_reimbursement_config
+        elif confirm "\nWould you like to reimburse reputation account for reputation contract lease costs?"; then
             set_reimbursement_config
         fi
-    elif confirm "\nWould you like to reimburse reputation account for reputation contract lease costs?"; then
-        set_reimbursement_config
-    fi
-}
+
+    }
 
     set_reimbursement_config(){
             echomult "Configuring Evernode reputation reimbursement system"
