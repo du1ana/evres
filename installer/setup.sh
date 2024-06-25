@@ -109,7 +109,7 @@
     export O2MCONST=$(echo "0.000010 + 0.4 + 0.2*5" | bc)
     export O2OCONST=0.000010
 
-    export NETWORK="${NETWORK:-mainnet}"
+    export NETWORK="${NETWORK:devnet}"
 
     # Private docker registry (not used for now)
     export DOCKER_REGISTRY_USER="sashidockerreg"
