@@ -16,5 +16,11 @@
         "rippledServer": "wss://xahau.network",
         "stateIndexId": "evernodev3devindex",
         "networkID": 21337
+    },
+    "reptestnet": {
+        "governorAddress": "r9DFqbCVyNkA5HBog1hME9iSdg9FnbXgnV",
+        "rippledServer": "wss://hooks-testnet-v3.xrpl-labs.com",
+        "stateIndexId": "evernodev3devindex",
+        "networkID": 21338
     }
 }
