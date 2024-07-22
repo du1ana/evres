@@ -17,6 +17,7 @@ const hash3 = crypto.createHash('sha512');
 
 fileStream.on('data', (chunk) => {
   console.log('dbg: Reading chunk of size', Math.floor(chunk.length / (1024 * 1024)), 'MB');
+  console.log("Read chunk:",chunk);
   hash.update(chunk);
   hash1.update(chunk+"1");
   hash2.update(chunk+"2");
