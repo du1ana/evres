@@ -5,7 +5,9 @@ const crypto = require('node:crypto');
 const filePath = path.join(__dirname, 'large_file.bin');
 
 console.log('dbg: Creating file stream');
-const fileStream = fs.createReadStream(filePath, { highWaterMark: 900 * 1024 * 1024 });
+const fileStream = fs.createReadStream(filePath, //{ highWaterMark: 900 * 1024 * 1024 }
+
+);
 
 console.log('dbg: Creating hash object');
 const hash = crypto.createHash('sha512');
