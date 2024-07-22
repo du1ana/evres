@@ -4,7 +4,7 @@ const crypto = require('node:crypto');
 
 const filePath = path.join(__dirname, 'large_file.bin');
 
-const fileStream = fs.createReadStream(filePath, //{ highWaterMark: 900 * 1024 * 1024 }
+const fileStream = fs.createReadStream(filePath, { highWaterMark: 900 * 1024 * 1024 }
 
 );
 const hash = crypto.createHash('sha512');
