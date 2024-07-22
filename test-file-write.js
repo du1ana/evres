@@ -1,10 +1,9 @@
 const fs = require('fs');
-const os = require('os');
 const path = require('path');
 const crypto = require('crypto');
 
-// Get the total memory in bytes
-const totalMemoryBytes = os.totalmem() + Math.floor(os.totalmem() / 1000);
+// Define the file size as 1.5GB
+const fileSizeBytes = 1.5 * 1024 * 1024 * 1024; // 1.5GB in bytes
 
 // Define the file path
 const filePath = path.join(__dirname, 'large_file.bin');
@@ -13,13 +12,13 @@ let writtenBytes = 0;
 
 // Function to write the buffer to the file
 function writeToFile(fd) {
-  if (writtenBytes >= totalMemoryBytes) {
+  if (writtenBytes >= fileSizeBytes) {
     console.log('File writing completed.');
     return;
   }
 
   // Calculate the remaining bytes to write
-  const remainingBytes = totalMemoryBytes - writtenBytes;
+  const remainingBytes = fileSizeBytes - writtenBytes;
   const bytesToWrite = Math.min(remainingBytes, 1024 * 1024); // 1 MB at a time
 
   // Create a buffer filled with random data
@@ -45,4 +44,3 @@ fs.open(filePath, 'w', (err, fd) => {
   }
   writeToFile(fd);
 });
-
