@@ -3,7 +3,7 @@ const path = require('path');
 const crypto = require('crypto');
 
 // Define the file size as 1.5GB
-const fileSizeBytes = 1.5 * 1024 * 1024 * 1024; // 1.5GB in bytes
+const fileSizeBytes = 1.75 * 1024 * 1024 * 1024; // 1.5GB in bytes
 
 // Define the file path
 const filePath = path.join(__dirname, 'large_file.bin');
