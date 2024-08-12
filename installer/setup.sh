@@ -27,8 +27,8 @@
     reputationd_script_dir=$(dirname "$(realpath "$0")")
     root_user="root"
 
-    repo_owner="du1ana"
-    repo_name="evres"
+    repo_owner="EvernodeXRPL"
+    repo_name="evernode-resources"
     desired_branch="main"
 
     # Reputation modes : 0 - "none", 1 - "OneToOne", 2 - "OneToMany"
@@ -465,7 +465,7 @@
 
             resolve_filepath tls_key_file r "Please specify location of the private key (usually ends with .key):"
             resolve_filepath tls_cert_file r "Please specify location of the certificate (usually ends with .crt):"
-            resolve_filepath tls_cabundle_file o "Please specify location of ca bundle (usually ends with .ca-bundle [Optional]):"
+            resolve_filepath tls_cabundle_file r "Please specify location of ca bundle (usually ends with .ca-bundle):"
         fi
         return 0
     }
@@ -680,6 +680,16 @@
             read -ep "Please specify the two-letter country code where your server is located in (eg. AU): " countrycode </dev/tty
             resolve_countrycode || echo "Invalid country code."
         done
+    }
+
+    function check_ipv4_req() {
+        # Check for IPv4 addresses
+        local ipv4_addresses=$(ip -4 addr show | grep inet)
+        if [ -z "$ipv4_addresses" ]; then
+            echomult "Your system does not support IPv4."
+            echomult "$evernode host registration requires IPv4 support for dApp deployment."
+            exit 1
+        fi
     }
 
     function set_ipv6_subnet() {
@@ -1736,15 +1746,14 @@ WantedBy=timers.target" >/etc/systemd/system/$EVERNODE_AUTO_UPDATE_SERVICE.timer
         local tls_cert_file=$2
         local tls_cabundle_file=$3
 
-        ([ ! -f "$tls_key_file" ] || [ ! -f "$tls_cert_file" ] ||
-            ([ "$tls_cabundle_file" != "" ] && [ ! -f "$tls_cabundle_file" ])) &&
-            echo -e "One or more invalid files provided.\nusage: applyssl <private key file> <cert file> <ca bundle file (optional)>" && exit 1
+        ([ ! -f "$tls_key_file" ] || [ ! -f "$tls_cert_file" ] || [ ! -f "$tls_cabundle_file" ]) &&
+            echo -e "One or more invalid files provided.\nusage: applyssl <private key file> <cert file> <ca bundle file>" && exit 1
 
         echo "Applying new SSL certificates for $evernode"
         echo "Key: $tls_key_file" && cp $tls_key_file $SASHIMONO_DATA/contract_template/cfg/tlskey.pem || exit 1
         echo "Cert: $tls_cert_file" && cp $tls_cert_file $SASHIMONO_DATA/contract_template/cfg/tlscert.pem || exit 1
-        # ca bundle is optional.
-        [ "$tls_cabundle_file" != "" ] && echo "CA bundle: $tls_cabundle_file" && (cat $tls_cabundle_file >>$SASHIMONO_DATA/contract_template/cfg/tlscert.pem || exit 1)
+        # ca bundle is also required.
+        echo "CA bundle: $tls_cabundle_file" && (cat $tls_cabundle_file >>$SASHIMONO_DATA/contract_template/cfg/tlscert.pem || exit 1)
 
         sashi list | jq -rc '.[]' | while read -r inst; do
             local instuser=$(echo $inst | jq -r '.user')
@@ -1890,7 +1899,7 @@ WantedBy=timers.target" >/etc/systemd/system/$EVERNODE_AUTO_UPDATE_SERVICE.timer
             alloc_swapKB=$((swapMB * 1000))
             alloc_diskKB=$((diskMB * 1000))
 
-            ( ([[ $alloc_instcount -eq 0 ]] || [[ $max_instance_count == $alloc_instcount ]]) &&
+            ([[ $alloc_instcount -eq 0 ]] &&
                 ([[ $alloc_ramKB -eq 0 ]] || [[ $max_mem_kbytes == $alloc_ramKB ]]) &&
                 ([[ $alloc_swapKB -eq 0 ]] || [[ $max_swap_kbytes == $alloc_swapKB ]]) &&
                 ([[ $alloc_diskKB -eq 0 ]] || [[ $max_storage_kbytes == $alloc_diskKB ]])) &&
@@ -2317,6 +2326,7 @@ WantedBy=timers.target" >/etc/systemd/system/$EVERNODE_AUTO_UPDATE_SERVICE.timer
             to you since we will be making modifications to your system configuration.
             \n\nContinue?" && exit 1
 
+        check_ipv4_req
         check_sys_req
         check_prereq
 
@@ -2407,7 +2417,8 @@ WantedBy=timers.target" >/etc/systemd/system/$EVERNODE_AUTO_UPDATE_SERVICE.timer
 
         echomult "Installation successful! Installation log can be found at $logfile
             \n\nYour system is now registered on $evernode. You can check your system status with 'evernode status' command.
-            \n\nNOTE: Installation will only mint the lease tokens. Please use 'evernode offerlease' command to create offers for the minted lease tokens.
+            \n\nNOTE: Installation will only mint the lease tokens. Offers will be created upon the start of message board.
+            \nIf not you can use 'evernode offerlease' command to create offers for the minted lease tokens.
             \nThe host becomes eligible to send heartbeats after generating offers for minted lease tokens."
 
         installed=true
