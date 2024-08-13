@@ -27,8 +27,8 @@
     reputationd_script_dir=$(dirname "$(realpath "$0")")
     root_user="root"
 
-    repo_owner="EvernodeXRPL"
-    repo_name="evernode-resources"
+    repo_owner="du1ana"
+    repo_name="evres"
     desired_branch="main"
 
     # Reputation modes : 0 - "none", 1 - "OneToOne", 2 - "OneToMany"
@@ -108,7 +108,7 @@
     export O2MCONST=$(echo "0.000010 + 0.4 + 0.2*5" | bc)
     export O2OCONST=0.000010
 
-    export NETWORK="${NETWORK:-mainnet}"
+    export NETWORK="${NETWORK:-testnet}"
 
     # Private docker registry (not used for now)
     export DOCKER_REGISTRY_USER="sashidockerreg"
