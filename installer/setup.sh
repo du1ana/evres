@@ -270,7 +270,7 @@
             version=$(node -v | cut -d '.' -f1)
             version=${version:1}
             if [[ $version -lt 20 ]]; then
-                echo "$evernode requires NodeJs 20.x or later. You system has NodeJs $version installed. Either remove the NodeJs installation or upgrade to NodeJs 20.x."
+                echo "$evernode requires NodeJs 20.x or later. Your system has NodeJs $version installed. Either remove the NodeJs installation or upgrade to NodeJs 20.x."
                 exit 1
             fi
         fi
@@ -1593,6 +1593,9 @@ WantedBy=timers.target" >/etc/systemd/system/$EVERNODE_AUTO_UPDATE_SERVICE.timer
         if [ "$latest_installer_script_version" != "$current_installer_script_version" ]; then
             # This is added temporary to remove auto updater. This can later be removed.
             remove_evernode_auto_updater
+            
+            inetaddr=$(jq -r ".hp.host_address | select( . != null )" "$SASHIMONO_CONFIG")
+
             install_evernode 1
         fi
 
